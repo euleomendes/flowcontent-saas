@@ -115,6 +115,7 @@ export interface SocialSubPage {
   followers: number;
   type: string; // Ex: "Página Comercial", "Perfil Criador", "Canal Oficial"
   selected: boolean;
+  portfolioPlatform?: 'instagram' | 'facebook';
 }
 
 export interface SocialAccount {
@@ -132,6 +133,7 @@ export interface SocialAccount {
   workspaceName?: string;
   authorizedPermissions?: string[];
   subPages?: SocialSubPage[];
+  metaAppId?: string;
 }
 
 export type StaggerRule = 

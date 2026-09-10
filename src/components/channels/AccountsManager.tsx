@@ -13,12 +13,14 @@ import {
   Layers,
   Check,
   Building2,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { SocialAccount, SocialPlatform } from '../../types';
 import { PLATFORM_INFO } from '../../utils/helpers';
 import { OAuthModal } from './OAuthModal';
+import { META_APP_ID, META_API_VERSION, openMetaOAuthWindow } from '../../services/metaAuth';
 
 export const AccountsManager: React.FC = () => {
   const { accounts, disconnectSocialAccount, showToast } = useApp();
@@ -43,6 +45,16 @@ export const AccountsManager: React.FC = () => {
   }, 0);
 
   const activeTokensCount = accounts.filter(a => a.connected && a.tokenStatus === 'active').length;
+
+  const igAccount = accounts.find(a => a.platform === 'instagram');
+  const fbAccount = accounts.find(a => a.platform === 'facebook');
+  const isMetaFullyConnected = igAccount?.connected && fbAccount?.connected;
+  const isMetaPartiallyConnected = igAccount?.connected || fbAccount?.connected;
+
+  const handleOpenMetaPortfolio = () => {
+    const targetAccount = igAccount || fbAccount || accounts[0];
+    setSelectedForOAuth(targetAccount);
+  };
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -81,6 +93,55 @@ export const AccountsManager: React.FC = () => {
           >
             <Plus className="w-4 h-4" />
             <span>Conectar Nova Rede</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Meta Business Suite Official App ID Integration Card */}
+      <div className="p-5 rounded-3xl bg-gradient-to-r from-blue-950/60 via-indigo-950/30 to-purple-950/40 border border-blue-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg shadow-blue-950/20">
+        <div className="flex items-start gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-black text-xl text-white shadow-md shadow-blue-500/20 shrink-0">
+            M
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-bold text-white">
+                Meta Business Suite • Integração Oficial
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 font-bold">
+                App ID: {META_APP_ID}
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+                Graph API v{META_API_VERSION}
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-1 max-w-xl">
+              Autorização unificada para <strong>Instagram Business</strong> e <strong>Páginas do Facebook</strong> vinculadas ao seu portfólio Meta. Permissões de publicação de reels, feed e métricas ativas.
+            </p>
+            <div className="flex items-center gap-3 mt-2 text-[11px] text-slate-400">
+              <span className="flex items-center gap-1">
+                <span className={`w-2 h-2 rounded-full ${igAccount?.connected ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                Instagram: {igAccount?.connected ? 'Ativo' : 'Pendente'}
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className={`w-2 h-2 rounded-full ${fbAccount?.connected ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                Facebook: {fbAccount?.connected ? 'Ativo' : 'Pendente'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={handleOpenMetaPortfolio}
+            className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-600/25 flex items-center gap-2 transition-all active:scale-[0.99]"
+          >
+            <Layers className="w-4 h-4" />
+            <span>
+              {isMetaPartiallyConnected ? 'Gerenciar Portfólio Meta' : 'Conectar Portfólio Meta'}
+            </span>
           </button>
         </div>
       </div>
@@ -129,6 +190,7 @@ export const AccountsManager: React.FC = () => {
         {filteredAccounts.map((account) => {
           const info = PLATFORM_INFO[account.platform];
           const isConnected = account.connected;
+          const isMeta = account.platform === 'instagram' || account.platform === 'facebook';
           const selectedSubPages = account.subPages?.filter(p => p.selected) || [];
 
           return (
@@ -179,6 +241,19 @@ export const AccountsManager: React.FC = () => {
                     {isConnected ? 'Autorizado' : 'Inativo'}
                   </span>
                 </div>
+
+                {/* Meta App ID Badge if applicable */}
+                {isMeta && (
+                  <div className="mb-3 px-2.5 py-1 rounded-xl bg-blue-950/40 border border-blue-500/20 flex items-center justify-between text-[10px]">
+                    <span className="text-blue-300 font-semibold flex items-center gap-1">
+                      <KeyRound className="w-3 h-3 text-blue-400" />
+                      Meta App ID:
+                    </span>
+                    <span className="font-mono text-slate-200 font-bold">
+                      {META_APP_ID}
+                    </span>
+                  </div>
+                )}
 
                 {/* Token status & expiration badge */}
                 <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80 mb-3.5 space-y-2 text-xs">
@@ -261,7 +336,7 @@ export const AccountsManager: React.FC = () => {
                       className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
                     >
                       <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>Gerenciar Páginas</span>
+                      <span>{isMeta ? 'Gerenciar Portfólio' : 'Gerenciar Páginas'}</span>
                     </button>
 
                     <button
@@ -302,7 +377,7 @@ export const AccountsManager: React.FC = () => {
 
       {/* Connect New Channel Modal */}
       {isConnectNewOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
           <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">
             <h3 className="text-base font-bold text-white mb-2">
               Escolha a rede social para autorizar
@@ -310,6 +385,35 @@ export const AccountsManager: React.FC = () => {
             <p className="text-xs text-slate-400 mb-5">
               Selecione qual canal você deseja vincular através do protocolo oficial de autenticação:
             </p>
+
+            {/* Quick Meta Business Suite Card */}
+            <div 
+              onClick={() => {
+                setIsConnectNewOpen(false);
+                handleOpenMetaPortfolio();
+              }}
+              className="p-3.5 mb-4 rounded-2xl bg-gradient-to-r from-blue-950/60 to-indigo-950/60 border border-blue-500/30 hover:border-blue-400/60 cursor-pointer transition-all flex items-center justify-between gap-3 group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white text-xs shadow group-hover:scale-105 transition-transform">
+                  M
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>Meta Business Suite</span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300">
+                      ID: {META_APP_ID}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Instagram Business + Facebook Pages
+                  </div>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-blue-400 group-hover:underline">
+                Conectar →
+              </span>
+            </div>
 
             <div className="grid grid-cols-2 gap-3 mb-6">
               {accounts.map(acc => {

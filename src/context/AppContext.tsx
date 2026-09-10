@@ -43,6 +43,7 @@ interface AppContextType {
   deletePost: (id: string) => void;
   toggleAccountConnection: (accountId: string) => void;
   connectSocialAccount: (account: SocialAccount) => void;
+  connectMultipleSocialAccounts: (accountsToConnect: SocialAccount[]) => void;
   disconnectSocialAccount: (accountId: string) => void;
   updateAccountSubPages: (accountId: string, subPages: SocialSubPage[]) => void;
   updateUserProfile: (profile: Partial<UserProfile>) => void;
@@ -256,6 +257,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     triggerCelebrationConfetti();
     showToast(`🎉 ${account.name} conectado com token OAuth 2.0 ativo!`, 'success');
+  };
+
+  const connectMultipleSocialAccounts = (accountsToConnect: SocialAccount[]) => {
+    setAccounts(prev => {
+      let updated = [...prev];
+      accountsToConnect.forEach(acc => {
+        const idx = updated.findIndex(a => a.id === acc.id || a.platform === acc.platform);
+        const item: SocialAccount = {
+          ...(idx >= 0 ? updated[idx] : acc),
+          ...acc,
+          connected: true,
+          tokenStatus: 'active',
+          tokenExpiresInDays: 60,
+          lastSync: 'Conectado agora'
+        };
+        if (idx >= 0) {
+          updated[idx] = item;
+        } else {
+          updated.push(item);
+        }
+      });
+      return updated;
+    });
+    triggerCelebrationConfetti();
+    const names = accountsToConnect.map(a => a.name).join(' e ');
+    showToast(`🎉 ${names} vinculadas com sucesso via Meta OAuth (App ID: 2745781192554036)!`, 'success');
   };
 
   const disconnectSocialAccount = (accountId: string) => {
@@ -581,6 +608,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deletePost,
         toggleAccountConnection,
         connectSocialAccount,
+        connectMultipleSocialAccounts,
         disconnectSocialAccount,
         updateAccountSubPages,
         updateUserProfile,

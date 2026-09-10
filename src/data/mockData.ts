@@ -1,5 +1,8 @@
 import { PostItem, SocialAccount, UserProfile, RegisteredUser } from '../types';
 import { getTodayISODate } from '../utils/dateUtils';
+import { META_APP_ID } from '../services/metaAuth';
+
+export { META_APP_ID };
 
 const today = new Date();
 const formatDateOffset = (offsetDays: number): string => {
@@ -119,10 +122,11 @@ export const INITIAL_ACCOUNTS: SocialAccount[] = [
     tokenExpiresInDays: 58,
     accountType: 'business',
     workspaceName: 'Workspace Principal',
+    metaAppId: META_APP_ID,
     authorizedPermissions: ['Publicação Automática de Reels/Feed', 'Leitura de Métricas de Engajamento', 'Sincronização em Lote'],
     subPages: [
-      { id: 'ig-sub-1', name: 'Flow Agência Digital', username: '@flowagencia', avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80', followers: 48500, type: 'Instagram Business', selected: true },
-      { id: 'ig-sub-2', name: 'Flow Trends & Bastidores', username: '@flow.bastidores', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', followers: 14200, type: 'Instagram Creator', selected: true }
+      { id: 'ig-sub-1', name: 'Flow Agência Digital', username: '@flowagencia', avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80', followers: 48500, type: 'Instagram Business', selected: true, portfolioPlatform: 'instagram' },
+      { id: 'ig-sub-2', name: 'Flow Trends & Bastidores', username: '@flow.bastidores', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', followers: 14200, type: 'Instagram Creator', selected: true, portfolioPlatform: 'instagram' }
     ]
   },
   {
@@ -191,9 +195,10 @@ export const INITIAL_ACCOUNTS: SocialAccount[] = [
     tokenExpiresInDays: 59,
     accountType: 'page',
     workspaceName: 'Workspace Principal',
+    metaAppId: META_APP_ID,
     authorizedPermissions: ['Gerenciamento de Páginas', 'Publicação de Mídias em Lote'],
     subPages: [
-      { id: 'fb-sub-1', name: 'Flow Content Oficial', username: 'flowcontent.br', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80', followers: 31200, type: 'Página do Facebook', selected: true }
+      { id: 'fb-sub-1', name: 'Flow Content Oficial', username: 'flowcontent.br', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80', followers: 31200, type: 'Página do Facebook', selected: true, portfolioPlatform: 'facebook' }
     ]
   },
   {
@@ -218,16 +223,16 @@ export const DISCOVERED_OAUTH_PAGES: Record<string, {
   authHeader: string;
   authDescription: string;
   scopes: string[];
-  pages: { id: string; name: string; username: string; avatar: string; followers: number; type: string; selected: boolean }[];
+  pages: { id: string; name: string; username: string; avatar: string; followers: number; type: string; selected: boolean; portfolioPlatform?: 'instagram' | 'facebook' }[];
 }> = {
   instagram: {
-    authHeader: 'Meta Business Suite • Instagram Professional',
-    authDescription: 'Conectando ao ecossistema Meta Graph API v19.0 para gerenciar contas comerciais do Instagram e páginas vinculadas.',
-    scopes: ['instagram_basic', 'instagram_content_publish', 'pages_show_list', 'pages_read_engagement'],
+    authHeader: `Meta Business Suite • App ID: ${META_APP_ID}`,
+    authDescription: `Conexão oficial ao ecossistema Meta Graph API v19.0 (App ID ${META_APP_ID}) para autorização de perfis comerciais do Instagram e páginas vinculadas.`,
+    scopes: ['instagram_basic', 'instagram_content_publish', 'pages_show_list', 'pages_read_engagement', 'pages_manage_posts', 'public_profile'],
     pages: [
-      { id: 'ig-page-1', name: 'Flow Agência Digital', username: '@flowagencia', avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80', followers: 48500, type: 'Conta Comercial (Business)', selected: true },
-      { id: 'ig-page-2', name: 'Flow Trends & Bastidores', username: '@flow.bastidores', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', followers: 14200, type: 'Conta de Criador (Creator)', selected: true },
-      { id: 'ig-page-3', name: 'E-commerce Moda Flow', username: '@modaflow.shop', avatar: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=150&auto=format&fit=crop&q=80', followers: 63100, type: 'Loja / Negócio Local', selected: false }
+      { id: 'ig-page-1', name: 'Flow Agência Digital', username: '@flowagencia', avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80', followers: 48500, type: 'Instagram Business', selected: true, portfolioPlatform: 'instagram' },
+      { id: 'ig-page-2', name: 'Flow Trends & Bastidores', username: '@flow.bastidores', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', followers: 14200, type: 'Instagram Creator', selected: true, portfolioPlatform: 'instagram' },
+      { id: 'ig-page-3', name: 'E-commerce Moda Flow', username: '@modaflow.shop', avatar: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=150&auto=format&fit=crop&q=80', followers: 63100, type: 'Loja / Negócio Local', selected: false, portfolioPlatform: 'instagram' }
     ]
   },
   linkedin: {
@@ -266,12 +271,13 @@ export const DISCOVERED_OAUTH_PAGES: Record<string, {
     ]
   },
   facebook: {
-    authHeader: 'Meta Pages API • Facebook for Business',
-    authDescription: 'Gerenciamento de páginas comerciais no Facebook e agendamento em lote sincronizado com a grade.',
-    scopes: ['pages_manage_posts', 'pages_read_engagement', 'publish_video'],
+    authHeader: `Meta Business Suite • App ID: ${META_APP_ID}`,
+    authDescription: `Gerenciamento oficial de páginas comerciais no Facebook via Meta Graph API v19.0 (App ID ${META_APP_ID}) integrado ao portfólio.`,
+    scopes: ['pages_manage_posts', 'pages_read_engagement', 'pages_show_list', 'public_profile', 'publish_video'],
     pages: [
-      { id: 'fb-page-1', name: 'Flow Content Oficial', username: 'flowcontent.br', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80', followers: 31200, type: 'Página Principal', selected: true },
-      { id: 'fb-page-2', name: 'Comunidade Flow Creators', username: 'comunidade.flow', avatar: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150&auto=format&fit=crop&q=80', followers: 15400, type: 'Grupo / Página de Suporte', selected: false }
+      { id: 'fb-page-1', name: 'Flow Content Oficial', username: 'flowcontent.br', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80', followers: 31200, type: 'Página do Facebook', selected: true, portfolioPlatform: 'facebook' },
+      { id: 'fb-page-2', name: 'Comunidade Flow Creators', username: 'comunidade.flow', avatar: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150&auto=format&fit=crop&q=80', followers: 15400, type: 'Página de Comunidade', selected: true, portfolioPlatform: 'facebook' },
+      { id: 'fb-page-3', name: 'Flow Agency Studio', username: 'flowstudio.fb', avatar: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=150&auto=format&fit=crop&q=80', followers: 18900, type: 'Página Comercial', selected: false, portfolioPlatform: 'facebook' }
     ]
   }
 };
