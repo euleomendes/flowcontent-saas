@@ -15,6 +15,7 @@ import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { AuthorizedChannelsStatus } from './components/dashboard/AuthorizedChannelsStatus';
 import { PendingApprovalView } from './components/auth/PendingApprovalView';
 import { MasterAdminPanel } from './components/admin/MasterAdminPanel';
+import { InstagramCallbackView } from './components/auth/InstagramCallbackView';
 
 const AppContent: React.FC = () => {
   const { activeTab, user, masterEmail } = useApp();
@@ -23,6 +24,22 @@ const AppContent: React.FC = () => {
   const isMaster = user.isMaster || user.email.toLowerCase() === masterEmail.toLowerCase();
   const isPending = user.status === 'pending';
   const isBlocked = user.status === 'blocked';
+
+  // Verifica se a URL atual é uma rota de retorno do OAuth
+  const isCallbackRoute = typeof window !== 'undefined' && (
+    window.location.pathname.startsWith('/auth/instagram/callback') ||
+    window.location.pathname.startsWith('/auth/meta/callback') ||
+    window.location.pathname.startsWith('/auth/callback')
+  );
+
+  if (isCallbackRoute) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+        <InstagramCallbackView />
+        <ToastContainer />
+      </div>
+    );
+  }
 
   // Dedicated full-screen Onboarding flow
   if (activeTab === 'onboarding') {

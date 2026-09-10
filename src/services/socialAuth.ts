@@ -145,7 +145,7 @@ export function getPlatformOAuthUrl(platform: SocialPlatform, redirectUri?: stri
   if (platform === 'instagram' || platform === 'facebook') {
     return `${config.authorizationUrl}?client_id=${config.clientId}&redirect_uri=${encodeURIComponent(
       targetRedirect
-    )}&scope=${encodeURIComponent(config.scopes.join(','))}&response_type=token&auth_type=rerequest&display=popup`;
+    )}&scope=${encodeURIComponent(config.scopes.join(','))}&response_type=code&auth_type=rerequest&display=popup`;
   }
 
   if (platform === 'tiktok') {

@@ -24,12 +24,12 @@ export const META_OAUTH_SCOPES = [
  */
 export function getMetaOAuthUrl(redirectUri?: string): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://flowcontent.app';
-  const targetRedirect = redirectUri || `${origin}/auth/meta/callback`;
+  const targetRedirect = redirectUri || `${origin}/auth/instagram/callback`;
   const scopesParam = META_OAUTH_SCOPES.join(',');
 
   return `https://www.facebook.com/${META_API_VERSION}/dialog/oauth?client_id=${META_APP_ID}&redirect_uri=${encodeURIComponent(
     targetRedirect
-  )}&scope=${encodeURIComponent(scopesParam)}&response_type=token&auth_type=rerequest&display=popup`;
+  )}&scope=${encodeURIComponent(scopesParam)}&response_type=code&auth_type=rerequest&display=popup`;
 }
 
 /**
