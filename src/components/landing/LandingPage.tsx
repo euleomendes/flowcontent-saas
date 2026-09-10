@@ -13,7 +13,7 @@ import {
 import { useApp } from '../../context/AppContext';
 
 export const LandingPage: React.FC = () => {
-  const { setActiveTab, setIsAuthModalOpen } = useApp();
+  const { setActiveTab, setIsAuthModalOpen, startOnboarding } = useApp();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const toggleFaq = (index: number) => {
@@ -58,18 +58,24 @@ export const LandingPage: React.FC = () => {
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setIsAuthModalOpen(true)}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900 border border-slate-800 transition-colors"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900 border border-slate-800 transition-colors"
             >
               Entrar
             </button>
             <button
-              onClick={() => setActiveTab('dashboard')}
-              className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-md shadow-brand-600/30 transition-all flex items-center gap-1.5"
+              onClick={startOnboarding}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-md shadow-brand-600/30 transition-all flex items-center gap-1.5"
             >
-              <span>Acessar Dashboard</span>
+              <span>Criar Conta</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className="hidden sm:flex px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors items-center gap-1.5"
+            >
+              <span>Dashboard</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -333,7 +339,7 @@ export const LandingPage: React.FC = () => {
                 </ul>
               </div>
               <button
-                onClick={() => setActiveTab('dashboard')}
+                onClick={startOnboarding}
                 className="mt-8 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white border border-slate-700 transition-colors"
               >
                 Começar no Starter
@@ -371,10 +377,10 @@ export const LandingPage: React.FC = () => {
                 </ul>
               </div>
               <button
-                onClick={() => setActiveTab('bulk')}
+                onClick={startOnboarding}
                 className="mt-8 w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-xs font-bold text-white shadow-lg shadow-brand-600/30 transition-all"
               >
-                Testar Pro Agora
+                Testar Pro Agora (Onboarding)
               </button>
             </div>
 

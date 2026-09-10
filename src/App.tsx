@@ -11,10 +11,28 @@ import { PostDetailModal } from './components/dashboard/PostDetailModal';
 import { BulkScheduler } from './components/bulk/BulkScheduler';
 import { AccountsManager } from './components/channels/AccountsManager';
 import { SettingsView } from './components/settings/SettingsView';
+import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
+import { AuthorizedChannelsStatus } from './components/dashboard/AuthorizedChannelsStatus';
+import { PendingApprovalView } from './components/auth/PendingApprovalView';
+import { MasterAdminPanel } from './components/admin/MasterAdminPanel';
 
 const AppContent: React.FC = () => {
-  const { activeTab } = useApp();
+  const { activeTab, user, masterEmail } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
+
+  const isMaster = user.isMaster || user.email.toLowerCase() === masterEmail.toLowerCase();
+  const isPending = user.status === 'pending';
+  const isBlocked = user.status === 'blocked';
+
+  // Dedicated full-screen Onboarding flow
+  if (activeTab === 'onboarding') {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+        <OnboardingFlow />
+        <ToastContainer />
+      </div>
+    );
+  }
 
   // If on landing page, display standalone landing layout
   if (activeTab === 'landing') {
@@ -22,6 +40,16 @@ const AppContent: React.FC = () => {
       <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
         <LandingPage />
         <AuthModal />
+        <ToastContainer />
+      </div>
+    );
+  }
+
+  // Gated Access: If user is Pending Approval or Blocked, block access to Dashboard and Scheduling tools
+  if (activeTab === 'pending_approval' || ((isPending || isBlocked) && !isMaster)) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+        <PendingApprovalView />
         <ToastContainer />
       </div>
     );
@@ -47,6 +75,7 @@ const AppContent: React.FC = () => {
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
                 <MetricCards />
+                <AuthorizedChannelsStatus />
                 <EditorialCalendar searchQuery={searchQuery} />
               </div>
             )}
@@ -57,6 +86,10 @@ const AppContent: React.FC = () => {
 
             {activeTab === 'accounts' && (
               <AccountsManager />
+            )}
+
+            {activeTab === 'admin' && (
+              <MasterAdminPanel />
             )}
 
             {activeTab === 'settings' && (

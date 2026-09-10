@@ -107,6 +107,16 @@ export interface PostItem {
   };
 }
 
+export interface SocialSubPage {
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+  followers: number;
+  type: string; // Ex: "Página Comercial", "Perfil Criador", "Canal Oficial"
+  selected: boolean;
+}
+
 export interface SocialAccount {
   id: string;
   platform: SocialPlatform;
@@ -116,6 +126,12 @@ export interface SocialAccount {
   connected: boolean;
   followers: number;
   lastSync?: string;
+  tokenStatus?: 'active' | 'expiring_soon' | 'expired' | 'revoked';
+  tokenExpiresInDays?: number;
+  accountType?: 'business' | 'creator' | 'personal' | 'page';
+  workspaceName?: string;
+  authorizedPermissions?: string[];
+  subPages?: SocialSubPage[];
 }
 
 export type StaggerRule = 
@@ -151,12 +167,39 @@ export interface DashboardStats {
   queuedNext7Days: number;
 }
 
-export type NavigationTab = 'landing' | 'dashboard' | 'bulk' | 'accounts' | 'settings';
+export type NavigationTab = 'landing' | 'dashboard' | 'bulk' | 'accounts' | 'settings' | 'onboarding' | 'admin' | 'pending_approval';
+
+export type UserAccessStatus = 'approved' | 'pending' | 'blocked';
+
+export interface RegisteredUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar: string;
+  organization: string;
+  workspaceName: string;
+  industry?: string;
+  status: UserAccessStatus;
+  isMaster?: boolean;
+  createdAt: string;
+  approvedAt?: string;
+  plan: 'Starter' | 'Pro' | 'Agência';
+}
 
 export interface UserProfile {
+  id?: string;
   name: string;
   email: string;
   role: string;
   avatar: string;
   plan: 'Starter' | 'Pro' | 'Agência';
+  status?: UserAccessStatus;
+  isMaster?: boolean;
+  organization?: string;
+  workspaceName?: string;
+  timezone?: string;
+  teamSize?: string;
+  industry?: string;
+  onboardingCompleted?: boolean;
 }

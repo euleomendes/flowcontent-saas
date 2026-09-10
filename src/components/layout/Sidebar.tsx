@@ -9,7 +9,9 @@ import {
   ExternalLink,
   ChevronRight,
   Sparkles,
-  HelpCircle
+  HelpCircle,
+  Crown,
+  ShieldCheck
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { NavigationTab } from '../../types';
@@ -20,12 +22,23 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = () => {
-  const { activeTab, setActiveTab, stats, user } = useApp();
+  const { activeTab, setActiveTab, stats, user, masterEmail, registeredUsers } = useApp();
+
+  const isMaster = user.isMaster || user.email.toLowerCase() === masterEmail.toLowerCase();
+  const pendingCount = registeredUsers.filter(u => u.status === 'pending').length;
 
   const navItems: { id: NavigationTab; label: string; icon: React.ElementType; badge?: string | number }[] = [
     { id: 'dashboard', label: 'Dashboard & Calendário', icon: LayoutDashboard, badge: stats.totalScheduled },
     { id: 'bulk', label: 'Agendamento em Lote', icon: Layers, badge: 'Core' },
     { id: 'accounts', label: 'Redes Conectadas', icon: Share2, badge: `${stats.connectedAccounts}/6` },
+    ...(isMaster ? [
+      { 
+        id: 'admin' as NavigationTab, 
+        label: 'Painel Master Admin', 
+        icon: Crown, 
+        badge: pendingCount > 0 ? `${pendingCount} pendente(s)` : undefined 
+      }
+    ] : []),
     { id: 'settings', label: 'Configurações', icon: Settings }
   ];
 
@@ -136,14 +149,30 @@ export const Sidebar: React.FC<SidebarProps> = () => {
 
         {/* User profile row */}
         <div className="flex items-center gap-3 px-1 py-1">
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="w-8 h-8 rounded-full object-cover border border-slate-700 ring-2 ring-brand-500/20"
-          />
+          <div className="relative shrink-0">
+            <img
+              src={user.avatar}
+              alt={user.name}
+              className="w-8 h-8 rounded-full object-cover border border-slate-700 ring-2 ring-brand-500/20"
+            />
+            {isMaster && (
+              <div className="w-3.5 h-3.5 rounded-full bg-amber-500 text-slate-950 font-bold absolute -top-1 -right-1 flex items-center justify-center text-[8px] shadow">
+                👑
+              </div>
+            )}
+          </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-200 truncate">{user.name}</p>
-            <p className="text-[10px] text-slate-400 truncate">{user.role}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs font-semibold text-slate-200 truncate">{user.name}</p>
+              {isMaster && (
+                <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">
+                  Master
+                </span>
+              )}
+            </div>
+            <p className="text-[10px] text-slate-400 truncate">
+              {isMaster ? 'Administrador Master' : user.workspaceName || user.role}
+            </p>
           </div>
         </div>
       </div>
