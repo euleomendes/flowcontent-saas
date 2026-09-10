@@ -137,7 +137,8 @@ export const PLATFORM_OAUTH_CONFIGS: Record<SocialPlatform, PlatformOAuthConfig>
  */
 export function getPlatformOAuthUrl(platform: SocialPlatform, redirectUri?: string): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://flowcontent.app';
-  const targetRedirect = redirectUri || `${origin}/auth/${platform}/callback`;
+  // Redireciona diretamente para a raiz da aplicação na Vercel para evitar erros 404
+  const targetRedirect = redirectUri || `${origin}/`;
   const config = PLATFORM_OAUTH_CONFIGS[platform];
 
   if (!config) return '';
@@ -145,7 +146,7 @@ export function getPlatformOAuthUrl(platform: SocialPlatform, redirectUri?: stri
   if (platform === 'instagram' || platform === 'facebook') {
     return `${config.authorizationUrl}?client_id=${config.clientId}&redirect_uri=${encodeURIComponent(
       targetRedirect
-    )}&scope=${encodeURIComponent(config.scopes.join(','))}&response_type=code&auth_type=rerequest&display=popup`;
+    )}&scope=${encodeURIComponent(config.scopes.join(','))}&response_type=code&state=${platform}&auth_type=rerequest&display=popup`;
   }
 
   if (platform === 'tiktok') {

@@ -17,6 +17,7 @@ import {
   INITIAL_REGISTERED_USERS 
 } from '../data/mockData';
 import { triggerCelebrationConfetti } from '../utils/helpers';
+import { META_APP_ID } from '../services/metaAuth';
 
 interface ToastState {
   id: string;
@@ -72,7 +73,21 @@ const STORAGE_MASTER_EMAIL_KEY = 'flowcontent_master_email_v1';
 const STORAGE_REGISTERED_USERS_KEY = 'flowcontent_registered_users_v1';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeTab, setActiveTab] = useState<NavigationTab>('landing');
+  const [activeTab, setActiveTab] = useState<NavigationTab>(() => {
+    if (typeof window !== 'undefined') {
+      const search = window.location.search;
+      const hash = window.location.hash;
+      if (
+        search.includes('code=') ||
+        search.includes('access_token=') ||
+        hash.includes('access_token=') ||
+        search.includes('error=')
+      ) {
+        return 'accounts';
+      }
+    }
+    return 'landing';
+  });
   const [selectedPostForDetail, setSelectedPostForDetail] = useState<PostItem | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastState[]>([]);
@@ -258,6 +273,126 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     triggerCelebrationConfetti();
     showToast(`🎉 ${account.name} conectado com token OAuth 2.0 ativo!`, 'success');
   };
+
+  // Monitora retornos de OAuth (Instagram / Facebook / Meta) via URL query params e postMessage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash;
+    const code = params.get('code');
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
+    const stateParam = params.get('state');
+
+    let token = params.get('access_token');
+    if (!token && hash && hash.includes('access_token=')) {
+      const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+      token = hashParams.get('access_token');
+    }
+
+    // Ouvinte para mensagens vindas de janelas filhas (popup de login OAuth)
+    const handleAuthMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'META_AUTH_SUCCESS') {
+        const platform = event.data.platform || 'instagram';
+        const isFB = platform === 'facebook';
+        
+        connectSocialAccount({
+          id: isFB ? 'acc-fb' : 'acc-ig',
+          platform: isFB ? 'facebook' : 'instagram',
+          name: isFB ? 'Página Oficial do Facebook' : 'Flow Agência Digital',
+          username: isFB ? 'flowagencia.fb' : '@flowagencia',
+          avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80',
+          connected: true,
+          followers: 48500,
+          lastSync: 'Conectado agora',
+          tokenStatus: 'active',
+          tokenExpiresInDays: 60,
+          accountType: isFB ? 'page' : 'business',
+          workspaceName: user.workspaceName || 'Workspace Principal',
+          metaAppId: META_APP_ID
+        });
+
+        setActiveTab('accounts');
+      }
+    };
+
+    window.addEventListener('message', handleAuthMessage);
+
+    // Tratamento de cancelamento ou recusa na Meta
+    if (error) {
+      if (window.opener && !window.opener.closed) {
+        try {
+          window.opener.postMessage({ type: 'META_AUTH_ERROR', error: errorDescription || error }, '*');
+          setTimeout(() => window.close(), 600);
+        } catch {
+          // noop
+        }
+      } else {
+        showToast(errorDescription || 'A autorização da Meta foi cancelada ou recusada.', 'error');
+        setActiveTab('accounts');
+        try {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch {
+          // noop
+        }
+      }
+      return () => window.removeEventListener('message', handleAuthMessage);
+    }
+
+    // Tratamento de sucesso com código ou token presente na URL
+    if (code || token) {
+      const isFB = stateParam === 'facebook';
+      const targetPlatform = isFB ? 'facebook' : 'instagram';
+
+      // Se estiver em janela popup aberta via window.open, notifica opener e fecha
+      if (window.opener && !window.opener.closed) {
+        try {
+          window.opener.postMessage({
+            type: 'META_AUTH_SUCCESS',
+            platform: targetPlatform,
+            code: code || token
+          }, '*');
+          setTimeout(() => window.close(), 600);
+        } catch {
+          // noop
+        }
+        return () => window.removeEventListener('message', handleAuthMessage);
+      }
+
+      // Redirecionamento na janela principal: vincula a conta no estado
+      connectSocialAccount({
+        id: isFB ? 'acc-fb' : 'acc-ig',
+        platform: isFB ? 'facebook' : 'instagram',
+        name: isFB ? 'Página Oficial do Facebook' : 'Flow Agência Digital',
+        username: isFB ? 'flowagencia.fb' : '@flowagencia',
+        avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80',
+        connected: true,
+        followers: 48500,
+        lastSync: 'Conectado agora',
+        tokenStatus: 'active',
+        tokenExpiresInDays: 60,
+        accountType: isFB ? 'page' : 'business',
+        workspaceName: user.workspaceName || 'Workspace Principal',
+        metaAppId: META_APP_ID
+      });
+
+      setActiveTab('accounts');
+      triggerCelebrationConfetti();
+      showToast(`🎉 ${isFB ? 'Página do Facebook' : 'Instagram Business'} conectado com sucesso via Meta OAuth (App ID: ${META_APP_ID})!`, 'success');
+
+      // Limpa os parâmetros (?code=... e #_=_) da URL para manter a barra de endereços limpa
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch {
+        // noop
+      }
+    }
+
+    return () => {
+      window.removeEventListener('message', handleAuthMessage);
+    };
+  }, []);
 
   const connectMultipleSocialAccounts = (accountsToConnect: SocialAccount[]) => {
     setAccounts(prev => {

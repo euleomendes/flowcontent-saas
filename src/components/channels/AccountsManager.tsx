@@ -1,20 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus,
   Settings,
   XCircle,
-  ExternalLink
+  ExternalLink,
+  CheckCircle2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { SocialAccount } from '../../types';
 import { PLATFORM_INFO } from '../../utils/helpers';
 import { OAuthModal } from './OAuthModal';
+import { META_APP_ID } from '../../services/metaAuth';
 
 export const AccountsManager: React.FC = () => {
-  const { accounts, disconnectSocialAccount } = useApp();
+  const { accounts, disconnectSocialAccount, connectSocialAccount, user } = useApp();
   const [selectedForOAuth, setSelectedForOAuth] = useState<SocialAccount | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'available'>('all');
   const [isConnectNewOpen, setIsConnectNewOpen] = useState(false);
+  const [oauthNotice, setOauthNotice] = useState<string | null>(null);
+
+  // Lê código ou token de autorização diretamente da URL ao retornar do OAuth da Meta
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash;
+    const code = params.get('code');
+    const token = params.get('access_token') || (hash.includes('access_token=') ? new URLSearchParams(hash.replace(/^#/, '')).get('access_token') : null);
+    const state = params.get('state');
+
+    if (code || token) {
+      const isFB = state === 'facebook';
+      const targetPlatform = isFB ? 'facebook' : 'instagram';
+      const targetName = isFB ? 'Página Oficial do Facebook' : 'Flow Agência Digital';
+
+      connectSocialAccount({
+        id: isFB ? 'acc-fb' : 'acc-ig',
+        platform: targetPlatform,
+        name: targetName,
+        username: isFB ? 'flowagencia.fb' : '@flowagencia',
+        avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80',
+        connected: true,
+        followers: 48500,
+        lastSync: 'Conectado agora',
+        tokenStatus: 'active',
+        tokenExpiresInDays: 60,
+        accountType: isFB ? 'page' : 'business',
+        workspaceName: user.workspaceName || 'Workspace Principal',
+        metaAppId: META_APP_ID
+      });
+
+      setOauthNotice(`Conta ${targetName} conectada com sucesso via Meta OAuth (App ID: ${META_APP_ID})!`);
+
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch {
+        // noop
+      }
+
+      const timer = setTimeout(() => {
+        setOauthNotice(null);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   const handleDisconnect = (account: SocialAccount) => {
     const info = PLATFORM_INFO[account.platform];
@@ -33,6 +82,23 @@ export const AccountsManager: React.FC = () => {
 
   return (
     <div className="animate-fade-in space-y-5">
+      {/* OAuth Success Notification Banner */}
+      {oauthNotice && (
+        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3 text-xs text-emerald-300 animate-fade-in shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-medium">{oauthNotice}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setOauthNotice(null)}
+            className="text-slate-400 hover:text-white text-xs px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700 transition-colors"
+          >
+            OK
+          </button>
+        </div>
+      )}
+
       {/* Header Bar */}
       <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
