@@ -16,7 +16,6 @@ import { useApp } from '../../context/AppContext';
 import { SocialAccount, SocialPlatform } from '../../types';
 import { PLATFORM_INFO } from '../../utils/helpers';
 import { OAuthModal } from '../channels/OAuthModal';
-import { META_APP_ID } from '../../services/metaAuth';
 
 export const AuthorizedChannelsStatus: React.FC = () => {
   const { accounts, setActiveTab } = useApp();
@@ -124,12 +123,6 @@ export const AuthorizedChannelsStatus: React.FC = () => {
 
                 {/* Sub-pages and Token Status */}
                 <div className="space-y-1.5 text-[10px] text-slate-400 mb-3 bg-slate-900/50 p-2 rounded-lg border border-slate-800/60">
-                  {(account.platform === 'instagram' || account.platform === 'facebook') && (
-                    <div className="flex items-center justify-between pb-1 border-b border-slate-800/80">
-                      <span className="text-blue-400 font-semibold">Meta App ID:</span>
-                      <span className="font-mono text-[9px] text-slate-300 font-bold">{META_APP_ID}</span>
-                    </div>
-                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Páginas Autorizadas:</span>
                     <span className="font-semibold text-slate-300">

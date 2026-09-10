@@ -1,37 +1,30 @@
 import React, { useState } from 'react';
 import { 
-  Share2, 
   CheckCircle2, 
   XCircle, 
-  RefreshCw, 
   ExternalLink, 
-  ShieldCheck, 
   Users, 
   Plus,
-  KeyRound,
-  Lock,
   Layers,
-  Check,
-  Building2,
-  AlertCircle,
+  Settings,
+  ArrowRight,
   Sparkles,
-  ArrowRight
+  Link2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { SocialAccount, SocialPlatform } from '../../types';
 import { PLATFORM_INFO } from '../../utils/helpers';
 import { OAuthModal } from './OAuthModal';
-import { PLATFORM_OAUTH_CONFIGS } from '../../services/socialAuth';
 
 export const AccountsManager: React.FC = () => {
-  const { accounts, disconnectSocialAccount, showToast } = useApp();
+  const { accounts, disconnectSocialAccount } = useApp();
   const [selectedForOAuth, setSelectedForOAuth] = useState<SocialAccount | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'available'>('all');
   const [isConnectNewOpen, setIsConnectNewOpen] = useState(false);
 
   const handleDisconnect = (account: SocialAccount) => {
-    const config = PLATFORM_OAUTH_CONFIGS[account.platform];
-    if (window.confirm(`Deseja revogar o token OAuth e desconectar ${config.displayName} (${account.name})?`)) {
+    const info = PLATFORM_INFO[account.platform];
+    if (window.confirm(`Tem certeza que deseja desconectar o ${info.name} (${account.name})?`)) {
       disconnectSocialAccount(account.id);
     }
   };
@@ -42,46 +35,34 @@ export const AccountsManager: React.FC = () => {
     return true;
   });
 
-  const totalSubPages = accounts.reduce((acc, a) => {
-    return acc + (a.subPages?.filter(p => p.selected).length || (a.connected ? 1 : 0));
-  }, 0);
-
-  const activeTokensCount = accounts.filter(a => a.connected && a.tokenStatus === 'active').length;
+  const connectedCount = accounts.filter(a => a.connected && a.tokenStatus === 'active').length;
 
   return (
     <div className="animate-fade-in space-y-6">
-      {/* Top Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-brand-900/40 via-indigo-900/20 to-slate-900 border border-brand-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Top Header */}
+      <div className="p-6 rounded-3xl bg-slate-900/90 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
-              Gerenciamento Oficial de Canais
+            <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-brand-500/15 text-brand-400 border border-brand-500/20">
+              Canais & Perfis
             </span>
-            <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              OAuth 2.0 PKCE • Isolamento por Rede
+            <span className="text-xs text-slate-400">
+              {connectedCount} de {accounts.length} redes conectadas
             </span>
           </div>
           <h2 className="text-xl font-bold text-white mt-1.5">
-            Redes Sociais & Contas Autorizadas
+            Redes Sociais
           </h2>
           <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            Cada plataforma possui seu próprio fluxo de autenticação OAuth independente. Conecte suas contas comerciais para habilitar disparos e agendamento em lote com sincronização oficial.
+            Conecte suas contas para habilitar a fila de agendamento automático e disparos de conteúdo em lote.
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <div className="text-sm font-black text-white">
-              {activeTokensCount} / {accounts.length}
-            </div>
-            <div className="text-[11px] text-slate-400">Tokens ativos ({totalSubPages} páginas vinculadas)</div>
-          </div>
-
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setIsConnectNewOpen(true)}
-            className="py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-lg shadow-brand-600/30 flex items-center gap-2 transition-all shrink-0"
+            className="py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs shadow-md shadow-brand-600/20 flex items-center gap-2 transition-all active:scale-[0.99]"
           >
             <Plus className="w-4 h-4" />
             <span>Conectar Nova Rede</span>
@@ -101,7 +82,7 @@ export const AccountsManager: React.FC = () => {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Todas as Redes ({accounts.length})
+            Todas ({accounts.length})
           </button>
           <button
             type="button"
@@ -112,7 +93,7 @@ export const AccountsManager: React.FC = () => {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Tokens Ativos ({activeTokensCount})
+            Conectadas ({connectedCount})
           </button>
           <button
             type="button"
@@ -123,161 +104,110 @@ export const AccountsManager: React.FC = () => {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Disponíveis para Conectar ({accounts.length - activeTokensCount})
+            Desconectadas ({accounts.length - connectedCount})
           </button>
         </div>
       </div>
 
-      {/* Grid of Independent Platform Accounts */}
+      {/* Grid of Clean Minimalist Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredAccounts.map((account) => {
-          const config = PLATFORM_OAUTH_CONFIGS[account.platform];
-          const isConnected = account.connected;
+          const info = PLATFORM_INFO[account.platform];
+          const isConnected = account.connected && account.tokenStatus === 'active';
           const selectedSubPages = account.subPages?.filter(p => p.selected) || [];
 
           return (
             <div
               key={account.id}
-              className={`p-5 rounded-3xl border transition-all flex flex-col justify-between ${
+              className={`p-5 rounded-2xl border transition-all flex flex-col justify-between ${
                 isConnected
                   ? 'bg-slate-900/90 border-slate-700/80 shadow-md'
-                  : 'bg-slate-950/40 border-slate-800/80 hover:border-slate-700/80 shadow-sm'
+                  : 'bg-slate-950/40 border-slate-800/80 hover:border-slate-700'
               }`}
             >
               <div>
-                {/* Card Header with Platform Logo & Status */}
-                <div className="flex items-start justify-between mb-3.5">
+                {/* Header: Platform Info + Status */}
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <img
                         src={account.avatar}
                         alt={account.name}
-                        className="w-12 h-12 rounded-2xl object-cover ring-2 ring-slate-800 shadow-sm"
+                        className="w-12 h-12 rounded-xl object-cover ring-1 ring-slate-800"
                       />
                       <div 
                         className="w-4 h-4 rounded-full absolute -bottom-1 -right-1 border-2 border-slate-900 flex items-center justify-center text-[8px] text-white font-bold shadow"
-                        style={{ backgroundColor: config.color }}
+                        style={{ backgroundColor: info.color }}
                       >
-                        {account.platform === 'facebook' ? 'f' : (account.platform === 'twitter' ? '𝕏' : config.displayName.charAt(0))}
+                        {account.platform === 'facebook' ? 'f' : (account.platform === 'twitter' ? '𝕏' : info.name.charAt(0))}
                       </div>
                     </div>
 
                     <div>
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="text-xs font-bold text-white">
-                          {config.displayName}
-                        </h3>
-                      </div>
-                      <p className="text-[11px] text-slate-300 font-medium">
+                      <h3 className="text-sm font-bold text-white leading-tight">
+                        {info.name}
+                      </h3>
+                      <p className="text-xs text-slate-300 font-medium truncate max-w-[160px]">
                         {account.name}
                       </p>
-                      <p className="text-[10px] text-slate-500 font-mono">
+                      <p className="text-[11px] text-slate-500 font-mono truncate max-w-[160px]">
                         {account.username}
                       </p>
                     </div>
                   </div>
 
+                  {/* Status Pill */}
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 ${
+                    className={`text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 shrink-0 ${
                       isConnected
                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        : 'bg-slate-800 text-slate-400 border border-slate-700'
+                        : 'bg-slate-800/80 text-slate-400 border border-slate-700/60'
                     }`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
-                    {isConnected ? 'Autorizado' : 'Não conectado'}
+                    <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+                    {isConnected ? 'Conectado' : 'Desconectado'}
                   </span>
                 </div>
 
-                {/* API Credentials & Client ID Badge */}
-                <div 
-                  className="p-2.5 rounded-2xl border mb-3 flex items-center justify-between text-[10px] bg-slate-950/60"
-                  style={{ borderColor: `${config.color}30` }}
-                >
-                  <span className="text-slate-400 font-semibold flex items-center gap-1">
-                    <KeyRound className="w-3 h-3 text-emerald-400" />
-                    <span>{account.platform === 'instagram' || account.platform === 'facebook' ? 'Meta App ID:' : 'Client ID:'}</span>
-                  </span>
-                  <span className="font-mono text-slate-200 font-bold truncate max-w-[170px]">
-                    {config.clientId}
-                  </span>
-                </div>
-
-                {/* Token status & expiration badge */}
-                <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80 mb-3.5 space-y-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                      <Lock className="w-3 h-3 text-brand-400" />
-                      Status do Token:
-                    </span>
-                    <span className={`text-[11px] font-bold ${isConnected ? 'text-emerald-400' : 'text-slate-500'}`}>
-                      {isConnected ? `Ativo • Expira em ${account.tokenExpiresInDays || config.tokenValidityDays}d` : 'Inativo / Sem token'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-slate-400 flex items-center gap-1">
-                      <Users className="w-3 h-3 text-slate-500" />
-                      Alcance / Seguidores:
-                    </span>
-                    <span className="font-bold text-white">
-                      {account.followers.toLocaleString('pt-BR')}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Authorized Sub-Pages List */}
-                {isConnected && account.subPages && account.subPages.length > 0 && (
-                  <div className="mb-4 space-y-1.5">
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400 font-semibold">
-                        {account.platform === 'facebook' || account.platform === 'linkedin' ? 'Páginas Vinculadas:' : 'Perfis Vinculados:'}
+                {/* Account Details / Stats */}
+                <div className="py-2.5 px-3 rounded-xl bg-slate-950/60 border border-slate-800/80 mb-4 text-xs">
+                  {isConnected ? (
+                    <div className="flex items-center justify-between text-slate-300">
+                      <span className="flex items-center gap-1.5 text-slate-400">
+                        <Users className="w-3.5 h-3.5 text-slate-500" />
+                        {account.followers.toLocaleString('pt-BR')} seguidores
                       </span>
-                      <span className="text-brand-400 font-mono text-[10px]">
-                        {selectedSubPages.length} ativa(s)
-                      </span>
+                      {selectedSubPages.length > 0 && (
+                        <span className="text-[11px] text-brand-400 font-medium">
+                          {selectedSubPages.length} {selectedSubPages.length === 1 ? 'página' : 'páginas'}
+                        </span>
+                      )}
                     </div>
+                  ) : (
+                    <p className="text-slate-400 text-[11px]">
+                      Conecte sua conta para agendar postagens automáticas no feed e stories.
+                    </p>
+                  )}
+                </div>
 
-                    <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
-                      {account.subPages.map((sub) => (
-                        <div
-                          key={sub.id}
-                          className={`p-2 rounded-xl text-[11px] flex items-center justify-between border ${
-                            sub.selected
-                              ? 'bg-slate-950/60 border-slate-800 text-slate-200'
-                              : 'bg-slate-950/20 border-slate-900 text-slate-500 line-through'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <img src={sub.avatar} alt={sub.name} className="w-4 h-4 rounded-md object-cover shrink-0" />
-                            <span className="truncate font-medium">{sub.name}</span>
-                          </div>
-                          {sub.selected && (
-                            <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Permissions Chips */}
-                {isConnected && account.authorizedPermissions && account.authorizedPermissions.length > 0 && (
-                  <div className="mb-4 flex flex-wrap gap-1">
-                    {account.authorizedPermissions.slice(0, 2).map((perm, idx) => (
+                {/* Sub-pages pill list (if connected) */}
+                {isConnected && selectedSubPages.length > 0 && (
+                  <div className="mb-4 flex flex-wrap gap-1.5">
+                    {selectedSubPages.map(sub => (
                       <span
-                        key={idx}
-                        className="text-[9px] font-mono px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 truncate max-w-[200px]"
+                        key={sub.id}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-800 text-[10px] text-slate-300 border border-slate-700/80 max-w-[180px] truncate"
                       >
-                        {perm}
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                        <span className="truncate">{sub.name}</span>
                       </span>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80">
+              {/* Action Buttons */}
+              <div className="pt-3 border-t border-slate-800/80 flex items-center gap-2">
                 {isConnected ? (
                   <>
                     <button
@@ -285,28 +215,28 @@ export const AccountsManager: React.FC = () => {
                       onClick={() => setSelectedForOAuth(account)}
                       className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
                     >
-                      <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>Gerenciar Páginas / Token</span>
+                      <Settings className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Gerenciar</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleDisconnect(account)}
-                      title={`Desconectar ${config.displayName}`}
-                      className="p-2 rounded-xl bg-slate-800/80 hover:bg-rose-500/15 hover:text-rose-400 text-slate-400 border border-slate-700 transition-colors"
+                      title="Desconectar conta"
+                      className="py-2 px-3 rounded-xl bg-slate-800/50 hover:bg-rose-500/15 hover:text-rose-400 text-slate-400 border border-slate-700/80 text-xs font-semibold transition-colors flex items-center justify-center gap-1"
                     >
-                      <XCircle className="w-4 h-4" />
+                      <span>Desconectar</span>
                     </button>
                   </>
                 ) : (
                   <button
                     type="button"
                     onClick={() => setSelectedForOAuth(account)}
-                    className="w-full py-2.5 px-3 rounded-xl text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.99] hover:opacity-95"
-                    style={{ backgroundColor: config.color }}
+                    className="w-full py-2.5 px-4 rounded-xl text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99] hover:opacity-95"
+                    style={{ backgroundColor: info.color }}
                   >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Conectar via OAuth 2.0</span>
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Conectar {info.name}</span>
                   </button>
                 )}
               </div>
@@ -315,7 +245,7 @@ export const AccountsManager: React.FC = () => {
         })}
       </div>
 
-      {/* OAuth Modal configured strictly for the selected platform */}
+      {/* OAuth Modal */}
       {selectedForOAuth && (
         <OAuthModal
           isOpen={!!selectedForOAuth}
@@ -326,20 +256,20 @@ export const AccountsManager: React.FC = () => {
         />
       )}
 
-      {/* Connect New Channel Modal */}
+      {/* Quick Connect Modal */}
       {isConnectNewOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-base font-bold text-white mb-2">
-              Escolha a rede social para conectar
+            <h3 className="text-base font-bold text-white mb-1">
+              Conectar Rede Social
             </h3>
             <p className="text-xs text-slate-400 mb-5">
-              Selecione a plataforma para disparar o protocolo OAuth 2.0 oficial correspondente:
+              Selecione qual plataforma você deseja autorizar para agendamento:
             </p>
 
             <div className="grid grid-cols-2 gap-3 mb-6">
               {accounts.map(acc => {
-                const config = PLATFORM_OAUTH_CONFIGS[acc.platform];
+                const info = PLATFORM_INFO[acc.platform];
                 return (
                   <button
                     key={acc.id}
@@ -352,13 +282,13 @@ export const AccountsManager: React.FC = () => {
                   >
                     <div 
                       className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-white shadow-sm text-xs shrink-0"
-                      style={{ backgroundColor: config.color }}
+                      style={{ backgroundColor: info.color }}
                     >
-                      {acc.platform === 'facebook' ? 'f' : (acc.platform === 'twitter' ? '𝕏' : config.displayName.charAt(0))}
+                      {acc.platform === 'facebook' ? 'f' : (acc.platform === 'twitter' ? '𝕏' : info.name.charAt(0))}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-white truncate">{config.displayName}</div>
-                      <div className="text-[10px] text-slate-400 font-mono">
+                      <div className="text-xs font-bold text-white truncate">{info.name}</div>
+                      <div className="text-[10px] text-slate-400">
                         {acc.connected ? '🟢 Conectado' : '⚪ Conectar'}
                       </div>
                     </div>
