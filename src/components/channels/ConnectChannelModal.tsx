@@ -10,9 +10,12 @@ import {
   KeyRound
 } from 'lucide-react';
 import { SocialAccount } from '../../types';
-import { PLATFORM_INFO } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
-import { META_APP_ID, META_API_VERSION, openMetaOAuthWindow } from '../../services/metaAuth';
+import { META_APP_ID } from '../../services/metaAuth';
+import { 
+  PLATFORM_OAUTH_CONFIGS, 
+  openPlatformOAuthWindow 
+} from '../../services/socialAuth';
 
 interface ConnectChannelModalProps {
   account: SocialAccount | null;
@@ -29,18 +32,16 @@ export const ConnectChannelModal: React.FC<ConnectChannelModalProps> = ({
 
   if (!account) return null;
 
+  const oauthConfig = PLATFORM_OAUTH_CONFIGS[account.platform];
   const isMeta = account.platform === 'instagram' || account.platform === 'facebook';
-  const platformInfo = PLATFORM_INFO[account.platform];
 
   const handleAuthorize = () => {
     setConnecting(true);
 
-    if (isMeta) {
-      try {
-        openMetaOAuthWindow();
-      } catch (err) {
-        console.warn('Popup blocked', err);
-      }
+    try {
+      openPlatformOAuthWindow(account.platform);
+    } catch (err) {
+      console.warn('Popup blocked', err);
     }
 
     setTimeout(() => {
@@ -51,23 +52,18 @@ export const ConnectChannelModal: React.FC<ConnectChannelModalProps> = ({
         ...account,
         connected: true,
         tokenStatus: 'active',
-        tokenExpiresInDays: 60,
+        tokenExpiresInDays: oauthConfig.tokenValidityDays,
         lastSync: 'Conectado agora',
         metaAppId: isMeta ? META_APP_ID : account.metaAppId
       };
 
       connectSocialAccount(updatedAccount);
-      showToast(
-        isMeta 
-          ? `Conta ${account.name} vinculada com Meta App ID: ${META_APP_ID}!` 
-          : `Conta ${account.name} vinculada com sucesso!`, 
-        'success'
-      );
+      showToast(`Conta ${account.name} vinculada com sucesso via ${oauthConfig.apiName}!`, 'success');
 
       setTimeout(() => {
         onClose();
-      }, 1200);
-    }, 1300);
+      }, 1100);
+    }, 1200);
   };
 
   return (
@@ -84,57 +80,52 @@ export const ConnectChannelModal: React.FC<ConnectChannelModalProps> = ({
         <div className="text-center mb-5">
           <div 
             className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-3 shadow-lg font-black text-xl text-white"
-            style={{ backgroundColor: isMeta ? '#1877F2' : platformInfo.color }}
+            style={{ backgroundColor: oauthConfig.color }}
           >
-            {isMeta ? 'M' : platformInfo.name.substring(0, 2)}
+            {account.platform === 'facebook' ? 'f' : (account.platform === 'twitter' ? '𝕏' : oauthConfig.displayName.charAt(0))}
           </div>
 
           <h3 className="text-base font-bold text-white">
-            {isMeta ? `Meta Business • Conectar ${platformInfo.name}` : `Conectar conta do ${platformInfo.name}`}
+            Conectar {oauthConfig.displayName}
           </h3>
           <p className="text-xs text-slate-400 mt-1">
-            {isMeta
-              ? `Autorize seu perfil via Meta Graph API v${META_API_VERSION} oficial para agendamento em lote.`
-              : 'Permitir que o FlowContent envie postagens agendadas automaticamente para seu perfil.'}
+            {oauthConfig.scopeDescription}
           </p>
         </div>
 
-        {/* Meta App ID Highlight */}
-        {isMeta && (
-          <div className="p-3.5 rounded-2xl bg-blue-950/40 border border-blue-500/30 mb-4 flex items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-blue-400 shrink-0" />
-              <div>
-                <span className="text-[10px] uppercase font-bold text-blue-300 block">
-                  Aplicativo Oficial Meta
-                </span>
-                <span className="font-mono text-xs font-extrabold text-white">
-                  App ID: {META_APP_ID}
-                </span>
-              </div>
+        {/* Dedicated Client ID / App ID Highlight */}
+        <div 
+          className="p-3.5 rounded-2xl border mb-4 flex items-center justify-between gap-3 text-xs bg-slate-950/60"
+          style={{ borderColor: `${oauthConfig.color}40` }}
+        >
+          <div className="flex items-center gap-2">
+            <KeyRound className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                {isMeta ? 'Meta App ID Oficial' : 'Client ID Oficial'}
+              </span>
+              <span className="font-mono text-xs font-extrabold text-white">
+                {oauthConfig.clientId}
+              </span>
             </div>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
-              SSL v19.0
-            </span>
           </div>
-        )}
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+            {oauthConfig.apiName}
+          </span>
+        </div>
 
         {/* Permissions list */}
-        <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2.5 mb-5 text-xs text-slate-300">
+        <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2 mb-5 text-xs text-slate-300">
           <p className="font-semibold text-slate-200 text-[11px] uppercase tracking-wider">
-            Permissões solicitadas:
+            Escopos da API solicitados:
           </p>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Publicar posts, vídeos, Reels e carrosséis no seu feed</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Acessar métricas e relatórios oficiais de engajamento</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Sincronização em segundo plano via token ativo (60 dias)</span>
+          <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+            {oauthConfig.scopes.map((scope, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="font-mono text-[10px] text-slate-300">{scope}</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -149,30 +140,18 @@ export const ConnectChannelModal: React.FC<ConnectChannelModalProps> = ({
             <button
               onClick={handleAuthorize}
               disabled={connecting}
-              className={`w-full py-3 px-4 rounded-xl font-bold text-xs text-white shadow-lg flex items-center justify-center gap-2 transition-all ${
-                isMeta
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-pink-600 hover:opacity-95 shadow-blue-600/30'
-                  : 'shadow-lg'
-              }`}
-              style={!isMeta ? { backgroundColor: platformInfo.color } : {}}
+              className="w-full py-3 px-4 rounded-xl font-bold text-xs text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+              style={{ backgroundColor: oauthConfig.color }}
             >
               {connecting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>
-                    {isMeta 
-                      ? `Abrindo janela Meta OAuth (ID: ${META_APP_ID})...` 
-                      : 'Autenticando via OAuth 2.0...'}
-                  </span>
+                  <span>Abrindo janela oficial do {oauthConfig.displayName}...</span>
                 </>
               ) : (
                 <>
-                  {isMeta ? <ExternalLink className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                  <span>
-                    {isMeta 
-                      ? `Abrir Autenticação Oficial Meta (App ID: ${META_APP_ID})` 
-                      : `Autorizar Conexão do ${platformInfo.name}`}
-                  </span>
+                  <ExternalLink className="w-4 h-4" />
+                  <span>Abrir Autenticação Oficial {oauthConfig.displayName}</span>
                 </>
               )}
             </button>
@@ -180,7 +159,7 @@ export const ConnectChannelModal: React.FC<ConnectChannelModalProps> = ({
 
           <p className="text-[10px] text-slate-400 text-center mt-3 flex items-center justify-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-            <span>Conexão criptografada de ponta a ponta</span>
+            <span>Token criptografado com isolamento seguro</span>
           </p>
         </div>
       </div>
