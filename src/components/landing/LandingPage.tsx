@@ -44,7 +44,7 @@ export const LandingPage: React.FC = () => {
       {/* Top Navbar */}
       <header className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
+          <div className="flex items-center gap-3 cursor-pointer">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
               <Zap className="w-5 h-5 text-white fill-white" />
             </div>
@@ -61,21 +61,15 @@ export const LandingPage: React.FC = () => {
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setIsAuthModalOpen(true)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900 border border-slate-800 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900 border border-slate-800 transition-colors"
             >
               Entrar
             </button>
             <button
               onClick={startOnboarding}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-md shadow-brand-600/30 transition-all flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-md shadow-brand-600/30 transition-all flex items-center gap-1.5"
             >
               <span>Criar Conta</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className="hidden sm:flex px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors items-center gap-1.5"
-            >
-              <span>Dashboard</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -104,20 +98,20 @@ export const LandingPage: React.FC = () => {
           {/* Primary CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-12">
             <button
-              onClick={() => setActiveTab('bulk')}
+              onClick={startOnboarding}
               className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold text-sm shadow-xl shadow-brand-600/30 hover:shadow-brand-600/50 transition-all flex items-center justify-center gap-2 group"
             >
               <Layers className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span>Experimentar Agendador em Lote</span>
+              <span>Criar Conta & Testar Agendador</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
 
             <button
-              onClick={() => setActiveTab('dashboard')}
+              onClick={() => setIsAuthModalOpen(true)}
               className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
             >
               <CalendarDays className="w-4 h-4 text-brand-400" />
-              <span>Explorar Calendário Editorial</span>
+              <span>Acessar Plataforma / Entrar</span>
             </button>
           </div>
 
@@ -408,10 +402,10 @@ export const LandingPage: React.FC = () => {
                 </ul>
               </div>
               <button
-                onClick={() => setActiveTab('dashboard')}
+                onClick={startOnboarding}
                 className="mt-8 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white border border-slate-700 transition-colors"
               >
-                Falar com Consultor
+                Começar no Plano Agência
               </button>
             </div>
           </div>
@@ -456,9 +450,9 @@ export const LandingPage: React.FC = () => {
             <span>— Agendamento Inteligente de Conteúdo em Lote</span>
           </div>
           <div className="flex items-center gap-6">
-            <button onClick={() => setActiveTab('dashboard')} className="hover:text-slate-200">Dashboard</button>
-            <button onClick={() => setActiveTab('bulk')} className="hover:text-slate-200">Agendamento em Lote</button>
-            <button onClick={() => setActiveTab('accounts')} className="hover:text-slate-200">Redes Sociais</button>
+            <button onClick={() => setIsAuthModalOpen(true)} className="hover:text-slate-200 transition-colors">Acessar Conta</button>
+            <button onClick={startOnboarding} className="hover:text-slate-200 transition-colors">Criar Nova Conta</button>
+            <a href="#pricing" className="hover:text-slate-200 transition-colors">Planos & Preços</a>
           </div>
           <p>© {new Date().getFullYear()} FlowContent. Todos os direitos reservados.</p>
         </div>
