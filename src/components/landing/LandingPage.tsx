@@ -83,11 +83,6 @@ export const LandingPage: React.FC = () => {
         <div className="absolute top-1/3 right-10 w-[300px] h-[250px] bg-purple-600/15 blur-[120px] pointer-events-none rounded-full" />
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-semibold mb-6 animate-fade-in">
-            <Sparkles className="w-3.5 h-3.5 text-brand-400" />
-            <span>Motor de Agendamento em Lote Inspirado no MyPageFlow</span>
-          </div>
-
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15] mb-6">
             Agende seu conteúdo em lote <br className="hidden sm:block" />
             <span className="bg-gradient-to-r from-brand-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">
@@ -452,7 +447,7 @@ export const LandingPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-brand-500 fill-brand-500" />
             <span className="font-bold text-slate-200">FlowContent</span>
-            <span>— Inspirado na proposta do MyPageFlow</span>
+            <span>— Agendamento Inteligente de Conteúdo em Lote</span>
           </div>
           <div className="flex items-center gap-6">
             <button onClick={() => setActiveTab('dashboard')} className="hover:text-slate-200">Dashboard</button>
